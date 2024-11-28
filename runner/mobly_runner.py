@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2023 The Android Open Source Project
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,22 +18,22 @@
 
 Example:
     - Run an Android platform test module.
-    local_mobly_runner.py -m my_test_module
+    mobly_runner.py -m my_test_module
 
     - Run an Android platform test module. Build the module and install test
       APKs before running the test.
-    local_mobly_runner.py -m my_test_module -b -i
+    mobly_runner.py -m my_test_module -b -i
 
     - Run an Android platform test module with specific Android devices.
-    local_mobly_runner.py -m my_test_module -s DEV00001,DEV00002
+    mobly_runner.py -m my_test_module -s DEV00001,DEV00002
 
     - Run a list of zipped executable Mobly packages
-    local_mobly_runner.py -p test_pkg1,test_pkg2,test_pkg3
+    mobly_runner.py -p test_pkg1,test_pkg2,test_pkg3
 
     - Install and run a test binary from a Python wheel
-    local_mobly_runner.py -w my-test-0.1-py3-none-any.whl --bin test_suite_a
+    mobly_runner.py -w my-test-0.1-py3-none-any.whl --bin test_suite_a
 
-Please run `local_mobly_runner.py -h` for a full list of options.
+Please run `mobly_runner.py -h` for a full list of options.
 """
 
 import argparse
