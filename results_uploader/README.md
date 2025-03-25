@@ -19,20 +19,10 @@ To start using the Results Uploader, you need to be able to access the shared
 Google Cloud Storage bucket:
 1. Confirm/request access to the shared GCP project with your Google contact.
    The Googler will give you a project name to use.
-2. Install the gcloud CLI from https://cloud.google.com/sdk/docs/install
-    * If installation fails with the above method, try the alternative linked
-      [here](https://cloud.google.com/sdk/docs/downloads-versioned-archives#installation_instructions).
-3. Run the following commands in the terminal:
-    ```bash
-    gcloud auth login
-    gcloud auth application-default login
-    gcloud config set project <gcp_project>
-    gcloud auth application-default set-quota-project <gcp_project>
-    ```
-    * When prompted to log in on your browser, follow the instruction to log in
-      to Cloud SDK. Use the same account for which you requested access in
-      step 1.
-4. Download the provided `results_uploader-{version}.tar.gz`.
+2. Download the provided `results_uploader-{version}-py3-none-any.whl`.
+3. Install the gcloud CLI from https://cloud.google.com/sdk/docs/install
+   * If installation fails with the above method, try the alternative linked
+     [here](https://cloud.google.com/sdk/docs/downloads-versioned-archives#installation_instructions).
 
 ## How to upload results
 1. Create a new terminal and run the following installation commands (first-time
@@ -43,14 +33,14 @@ Google Cloud Storage bucket:
 
     python3 -m venv venv
     source venv/bin/activate
-    python3 -m pip install results_uploader-{version}.tar.gz
+    python3 -m pip install results_uploader-{version}-py3-none-any.whl
     ```
     ```cmd
     :: on Windows
 
     python -m venv venv
     venv\Scripts\activate
-    python -m pip install results_uploader-{version}.tar.gz
+    python -m pip install results_uploader-{version}-py3-none-any.whl
     ```
 
 2. At the end of a completed test run, you'll see the final lines on the console
@@ -73,6 +63,13 @@ Google Cloud Storage bucket:
 4. If successful, at the end of the upload process you will get a link beginning
    with http://btx.cloud.google.com. Simply share this link to others who
    wish to view your test results.
+
+## Troubleshooting
+*  If the link is missing, or the contents of the link are empty, check the
+   debug logs of the uploader. Its location is shown at the beginning of the 
+   tool's output indicated by `Debug logs are saved to: ...`.
+*  Report any tool issues to Google and attach all tool output, including the
+   debug logs.
 
 ## Additional reference
 
