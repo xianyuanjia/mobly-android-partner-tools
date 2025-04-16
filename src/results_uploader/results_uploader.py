@@ -27,6 +27,7 @@ import pathlib
 import platform
 import shutil
 import subprocess
+import sys
 import tempfile
 import warnings
 from xml.etree import ElementTree
@@ -37,8 +38,8 @@ from google.cloud import resourcemanager_v3
 from google.cloud import storage
 from googleapiclient import discovery
 
-import mobly_result_converter
-import resultstore_client
+from results_uploader import mobly_result_converter
+from results_uploader import resultstore_client
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
@@ -81,7 +82,7 @@ class _TestResultInfo:
     target_id: str | None = None
 
 
-def _parse_args() -> argparse.Namespace:
+def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     """Parses the command-line arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -136,7 +137,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         '-v', '--verbose', action='store_true', help='Enable debug logs.'
     )
-    return parser.parse_args()
+    return parser.parse_args(args=argv or sys.argv[1:])
 
 
 def _setup_logging(verbose: bool) -> None:
@@ -385,7 +386,8 @@ def _upload_dir_to_gcs(
     """Uploads the given directory to a GCS bucket."""
     # Set correct MIME types for certain text-format files.
     with resources.as_file(
-            resources.files('data').joinpath('mime.types')) as path:
+            resources.files('results_uploader').joinpath(
+                'data/mime.types')) as path:
         mimetypes.init([path])
 
     bucket_obj = storage.Client().bucket(gcs_bucket)
@@ -445,7 +447,7 @@ def _upload_to_resultstore(
         target_id: str | None,
         labels: list[str],
 ) -> None:
-    """Uploads test results to Resultstore."""
+    """Calls the Resultstore Upload API to generate a new invocation."""
     logging.info('Generating Resultstore link...')
     creds, project_id = google.auth.default()
     service = discovery.build(
@@ -469,9 +471,20 @@ def _upload_to_resultstore(
     client.finalize_invocation()
 
 
-def main():
-    args = _parse_args()
+def main(argv: list[str] | None = None) -> None:
+    args = _parse_args(argv)
+
     _setup_logging(args.verbose)
+
+    mobly_dir = pathlib.Path(args.mobly_dir).absolute().expanduser()
+    if not mobly_dir.is_dir():
+        logging.error(
+            'The specified log directory %s does not exist, aborting.',
+            mobly_dir
+        )
+        return
+
+    # Configure local GCP parameters
     if args.reset_gcp_login:
         _run_gcloud_command(['auth', 'application-default', 'revoke', '-q'])
     try:
@@ -494,7 +507,6 @@ def main():
         if not args.gcs_dir
         else args.gcs_dir
     )
-    mobly_dir = pathlib.Path(args.mobly_dir).absolute().expanduser()
 
     if args.no_convert_result:
         # Determine the final status based on the test.xml
