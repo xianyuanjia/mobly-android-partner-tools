@@ -45,8 +45,8 @@ Google Cloud Storage bucket:
 ### Automatically upload results upon test completion
 
 To automatically upload results upon test completion, use the
-[`mobly_runner`](src/mobly_runner/README.md) to execute your tests, and add the
-following command-line option:
+[`mobly_runner`](../mobly_runner/README.md) to execute your tests, and 
+add the following command-line option:
 
 ```bash
 mobly_runner my_test_suite --upload_results
