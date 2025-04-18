@@ -4,17 +4,11 @@ The Results Uploader is a tool for generating shareable UI links for automated
 test results.
 
 It uploads test-generated files to Google Cloud Storage, and presents the
-results in an organized way on a dedicated web UI. The result URL can then be
-shared to anyone who is given access (including both Google and non-Google
-accounts), allowing for easy tracking and debugging.
+results in an organized way on a dedicated web UI (Resultstore/BTX). The result 
+URL can then be shared to anyone who is given access (including both Google and 
+non-Google accounts), allowing for easy tracking and debugging.
 
 ## First-time setup
-
-### Requirements
-
-* Python 3.11 or above
-
-### Instructions
 
 To start using the Results Uploader, you need to be able to access the shared
 Google Cloud Storage bucket:
@@ -27,9 +21,7 @@ Google Cloud Storage bucket:
 
 ## How to upload results
 
-1. Follow the installation instructions for [`mobly-android-partner-tools`](../../README.md#installation-instructions).
-
-2. At the end of a completed test run, you'll see the final lines on the console
+1. At the end of a completed test run, you'll see the final lines on the console
    output as follows. Record the folder path in the line starting with
    "Artifacts are saved in".
 
@@ -40,15 +32,25 @@ Google Cloud Storage bucket:
     Test results: Error 0, Executed 1, Failed 0, Passed 1, Requested 0, Skipped 0
     ```
 
-3. Run the uploader command, setting the `artifacts_folder` as the path recorded
+2. Run the uploader command, setting the `artifacts_folder` as the path recorded
    in the previous step.
     ```bash
     results_uploader <artifacts_folder>
     ```
 
-4. If successful, at the end of the upload process you will get a link beginning
+3. If successful, at the end of the upload process you will get a link beginning
    with http://btx.cloud.google.com. Simply share this link to others who
    wish to view your test results.
+
+### Automatically upload results upon test completion
+
+To automatically upload results upon test completion, use the
+[`mobly_runner`](../mobly_runner/README.md) to execute your tests, and 
+add the following command-line option:
+
+```bash
+mobly_runner my_test_suite --upload_results
+```
 
 ## Troubleshooting
 
