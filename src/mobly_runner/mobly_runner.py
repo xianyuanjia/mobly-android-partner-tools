@@ -141,6 +141,11 @@ def _parse_args() -> argparse.Namespace:
             'Upload results to Resultstore/BTX upon test completion.'
         )
     )
+    parser.add_argument(
+        '--label_on_pass',
+        help='Attach a label to the uploaded result, only if the result is '
+             'passing.'
+    )
 
     return parser.parse_args()
 
@@ -312,7 +317,12 @@ def main() -> None:
     # Upload results to Resultstore, if requested by user
     if args.upload_results:
         _padded_print('Uploading test results to Resultstore/BTX.')
-        results_uploader.main([str(latest_logs)])
+        upload_args = [str(latest_logs)]
+        if args.label_on_pass:
+            upload_args += [
+                '--label', args.label_on_pass, '--label_on_pass_only'
+            ]
+        results_uploader.main(upload_args)
 
 
 if __name__ == '__main__':
