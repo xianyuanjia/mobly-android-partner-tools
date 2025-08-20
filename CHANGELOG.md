@@ -1,5 +1,12 @@
 # Mobly Android Partner Tools release history
 
+## 1.4.1 (2025-09-09)
+
+### Fixes
+* [results_uploader] Exit early if there is nothing to upload, preventing an
+  empty invocation from being created.
+
+
 ## 1.4.0 (2025-08-19)
 
 ### New
