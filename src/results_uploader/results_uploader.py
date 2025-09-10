@@ -536,7 +536,7 @@ def main(argv: list[str] | None = None) -> None:
             'The specified log directory %s does not exist, aborting.',
             logs_dir
         )
-        return
+        exit(1)
 
     mobly_dirs = []
     cts_console_log_dir = None
@@ -553,6 +553,11 @@ def main(argv: list[str] | None = None) -> None:
                 if (args.cts and path.name == _CTS_CONSOLE_LOG_DIR
                         and any(path.iterdir())):
                     cts_console_log_dir = path
+
+    # Exit early if there's nothing to upload
+    if not mobly_dirs and not cts_console_log_dir:
+        logging.error('No logs to upload. Exiting.')
+        exit(1)
 
     # Configure local GCP parameters
     if args.reset_gcp_login:
@@ -573,7 +578,7 @@ def main(argv: list[str] | None = None) -> None:
             'project owner to create the required key.',
             _API_KEY_DISPLAY_NAME, project_id
         )
-        return
+        exit(1)
     rs_client = _start_resultstore_client(creds, project_id, api_key)
 
     gcs_bucket = project_id if args.gcs_bucket is None else args.gcs_bucket
