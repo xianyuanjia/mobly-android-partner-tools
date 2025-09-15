@@ -202,6 +202,7 @@ def _gcloud_login_and_set_project() -> None:
     while not project_id:
         project_id = input('Enter your GCP project ID: ')
     os.environ[google.auth.environment_vars.PROJECT] = project_id
+    os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
     _run_gcloud_command(
         ['config', 'set', 'project', project_id]
     )
