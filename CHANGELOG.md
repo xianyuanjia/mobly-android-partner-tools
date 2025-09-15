@@ -1,5 +1,13 @@
 # Mobly Android Partner Tools release history
 
+## 1.4.2 (2025-09-15)
+
+### Fixes
+* [results_uploader] Fix typo for `testCase` in the Inspector URL.
+* [results_uploader] Set `OAUTHLIB_RELAX_TOKEN_SCOPE` env variable to resolve
+  gcloud login error.
+
+
 ## 1.4.1 (2025-09-09)
 
 ### Fixes
