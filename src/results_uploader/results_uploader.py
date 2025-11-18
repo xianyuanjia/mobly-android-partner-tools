@@ -24,11 +24,9 @@ from importlib import resources
 import itertools
 import logging
 import mimetypes
-import os
 import pathlib
 import platform
 import shutil
-import subprocess
 import sys
 import tempfile
 import warnings
@@ -40,6 +38,7 @@ from google.cloud import resourcemanager_v3
 from google.cloud import storage
 from googleapiclient import discovery
 
+from results_uploader import gcloud_setup
 from results_uploader import mobly_result_converter
 from results_uploader import resultstore_client
 
@@ -188,38 +187,6 @@ def _get_summary_yaml_if_exists(mobly_dir: pathlib.Path) -> pathlib.Path | None:
     """Returns path to test_summary.yaml file if it exists, None otherwise."""
     summary_yaml = mobly_dir.joinpath(_TEST_SUMMARY_YAML)
     return summary_yaml if summary_yaml.is_file() else None
-
-
-def _run_gcloud_command(args: list[str]) -> None:
-    """Runs a command with the gcloud CLI."""
-    try:
-        subprocess.check_call(['gcloud'] + args)
-    except FileNotFoundError:
-        logging.error(
-            'Failed to run `gcloud` commands! Please install the `gcloud` CLI '
-            'from https://cloud.google.com/sdk/docs/install\n')
-        raise
-
-
-def _gcloud_login_and_set_project() -> None:
-    """Get gcloud application default creds and set the desired GCP project."""
-    logging.info('No credentials found. Performing initial setup.')
-    project_id = ''
-    while not project_id:
-        project_id = input('Enter your GCP project ID: ')
-    os.environ[google.auth.environment_vars.PROJECT] = project_id
-    os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
-    _run_gcloud_command(
-        ['config', 'set', 'project', project_id]
-    )
-    _run_gcloud_command(
-        ['auth', 'application-default', 'login', '--no-launch-browser']
-    )
-    _run_gcloud_command(
-        ['auth', 'application-default', 'set-quota-project', project_id]
-    )
-    logging.info('Initial setup complete!')
-    print('-' * 50)
 
 
 def _get_project_number(project_id: str) -> str:
@@ -479,12 +446,12 @@ def _upload_dir_to_gcs(
     return [f'{gcs_dir}/{path}' for path in success_paths]
 
 
-def _start_resultstore_client(
+def _get_resultstore_client(
         creds: google.auth.credentials.Credentials,
         project_id: str,
         api_key: str,
 ) -> resultstore_client.ResultstoreClient:
-    """Starts the Resultstore Upload client."""
+    """Initializes the Resultstore Upload client."""
     logging.info('Initializing Resultstore client...')
     service = discovery.build(
         _RESULTSTORE_SERVICE_NAME,
@@ -569,14 +536,12 @@ def main(argv: list[str] | None = None) -> None:
 
     # Configure local GCP parameters
     if args.reset_gcp_login:
-        _run_gcloud_command(['auth', 'application-default', 'revoke', '-q'])
-        if os.getenv(google.auth.environment_vars.CREDENTIALS):
-            del os.environ[google.auth.environment_vars.CREDENTIALS]
-        _gcloud_login_and_set_project()
+        gcloud_setup.revoke_local_credentials()
+        gcloud_setup.gcloud_login_and_set_project()
     try:
         creds, project_id = google.auth.default()
     except google.auth.exceptions.DefaultCredentialsError:
-        _gcloud_login_and_set_project()
+        gcloud_setup.gcloud_login_and_set_project()
         creds, project_id = google.auth.default()
     logging.info('Current GCP project ID: %s', project_id)
     api_key = _retrieve_api_key(project_id)
@@ -587,7 +552,7 @@ def main(argv: list[str] | None = None) -> None:
             _API_KEY_DISPLAY_NAME, project_id
         )
         exit(1)
-    rs_client = _start_resultstore_client(creds, project_id, api_key)
+    rs_client = _get_resultstore_client(creds, project_id, api_key)
 
     gcs_bucket = project_id if args.gcs_bucket is None else args.gcs_bucket
     gcs_base_dir = pathlib.PurePath(
