@@ -70,6 +70,8 @@ Google Cloud Storage bucket:
 2. Install the gcloud CLI from https://cloud.google.com/sdk/docs/install
     * If installation fails with the above method, try the alternative linked
       [here](https://cloud.google.com/sdk/docs/downloads-versioned-archives#installation_instructions).
+3. Download and execute [this script](src/results_uploader/gcloud_setup.py) to
+   log into the GCP project, and set up local credentials.
 
 ### How to upload results
 
@@ -103,6 +105,9 @@ add the following command-line option:
 ```bash
 mobly_runner my_test_suite --upload_results
 ```
+
+Note: You must have completed the uploader [First-time setup](#first-time-setup)
+prior to using this option, or the upload will automatically be aborted.
 
 ### Batch uploading
 If you run
