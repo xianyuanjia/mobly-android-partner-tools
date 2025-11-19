@@ -325,7 +325,7 @@ def main() -> None:
         _padded_print('Uploading test results to Resultstore/BTX.')
         upload_args = [
             str(latest_logs), '--start_time', str(start_time), '--duration',
-            str(duration)
+            str(duration), '--abort_if_no_creds',
         ]
         if args.label_on_pass:
             upload_args += [

@@ -157,6 +157,9 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         '--duration', type=int, help=argparse.SUPPRESS
     )
+    parser.add_argument(
+        '--abort_if_no_creds', action='store_true', help=argparse.SUPPRESS
+    )
     return parser.parse_args(args=argv or sys.argv[1:])
 
 
@@ -541,6 +544,12 @@ def main(argv: list[str] | None = None) -> None:
     try:
         creds, project_id = google.auth.default()
     except google.auth.exceptions.DefaultCredentialsError:
+        if args.abort_if_no_creds:
+            logging.error(
+                'No local credentials found (and abort_if_no_creds==True); '
+                'aborting upload. Please run gcloud_setup.py to login first.'
+            )
+            exit(1)
         gcloud_setup.gcloud_login_and_set_project()
         creds, project_id = google.auth.default()
     logging.info('Current GCP project ID: %s', project_id)
