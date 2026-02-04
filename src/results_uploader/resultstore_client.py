@@ -275,16 +275,43 @@ class ResultstoreClient:
         res = request.execute(http=self._http)
         logging.debug('invocations.targets.configuredTargets.create: %s', res)
 
-    def create_action(
-            self, gcs_bucket: str, gcs_dir: str, artifacts: list[str]
-    ) -> str:
-        """Creates an action.
+    @staticmethod
+    def get_file_metadata(
+            gcs_bucket: str, gcs_dir: str, artifacts: list[str],
+            uid_override: str = '', uid_prefix: str = ''
+    ) -> list[dict]:
+        """Get the Resultstore file metadata for each artifact.
 
         Args:
           gcs_bucket: The bucket in GCS where artifacts are stored.
           gcs_dir: Base directory of the artifacts in the GCS bucket.
           artifacts: List of paths (relative to gcs_bucket) to the test
             artifacts.
+          uid_override: Overrides the URI field for the first file. By
+            default, the URI is the relative path of the artifact.
+          uid_prefix: Adds a prefix to the URI field for the file. Has no effect
+            if used with uid_override.
+
+        Returns:
+           List of file metadata entries as dict (e.g. {'uid': ..., 'uri': ...})
+        """
+        files = []
+        for idx, path in enumerate(artifacts):
+            if idx == 0 and uid_override:
+                uid = uid_override
+            else:
+                uid = uid_prefix + str(
+                    pathlib.PurePosixPath(path).relative_to(gcs_dir)
+                )
+            uri = f'gs://{gcs_bucket}/{path}'
+            files.append({'uid': uid, 'uri': uri})
+        return files
+
+    def create_action(self, files: list[dict]) -> str:
+        """Creates an action.
+
+        Args:
+            files: The list of file metadata to associate with the action.
 
         Returns:
           The action ID.
@@ -292,11 +319,6 @@ class ResultstoreClient:
         logging.debug('creating action in %s...', self._configured_target_name)
         action_id = str(uuid.uuid4())
 
-        files = []
-        for path in artifacts:
-            uid = str(pathlib.PurePosixPath(path).relative_to(gcs_dir))
-            uri = f'gs://{gcs_bucket}/{path}'
-            files.append({'uid': uid, 'uri': uri})
         action = {
             'id': {
                 'invocationId': self._invocation_id,

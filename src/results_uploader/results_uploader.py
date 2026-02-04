@@ -151,6 +151,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         '-v', '--verbose', action='store_true', help='Enable debug logs.'
     )
+    # Used by mobly_runner
     parser.add_argument(
         '--start_time', type=int, help=argparse.SUPPRESS
     )
@@ -159,6 +160,12 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     )
     parser.add_argument(
         '--abort_if_no_creds', action='store_true', help=argparse.SUPPRESS
+    )
+    # Used by gcs_results_uploader
+    parser.add_argument(
+        '--use_existing_gcs_mobly_logs',
+        action='store_true',
+        help=argparse.SUPPRESS
     )
     return parser.parse_args(args=argv or sys.argv[1:])
 
@@ -391,6 +398,16 @@ def _get_test_result_info_from_test_xml(
     return test_result_info
 
 
+def _list_all_file_relative_paths(dir_path: pathlib.Path) -> list[str]:
+    """Recursively globs for files in the dir and return relative paths."""
+    glob = dir_path.rglob('*')
+    return [
+        str(path.relative_to(dir_path).as_posix())
+        for path in glob
+        if path.is_file()
+    ]
+
+
 def _upload_dir_to_gcs(
         src_dir: pathlib.Path, gcs_bucket: str, gcs_dir: str, timeout: int
 ) -> list[str]:
@@ -403,12 +420,7 @@ def _upload_dir_to_gcs(
 
     bucket_obj = storage.Client().bucket(gcs_bucket)
 
-    glob = src_dir.rglob('*')
-    file_paths = [
-        str(path.relative_to(src_dir).as_posix())
-        for path in glob
-        if path.is_file()
-    ]
+    file_paths = _list_all_file_relative_paths(src_dir)
 
     logging.info(
         'Uploading %s files from %s to Cloud Storage directory %s/%s...',
@@ -479,14 +491,15 @@ def _add_resultstore_target(
         client: resultstore_client.ResultstoreClient,
         gcs_bucket: str,
         gcs_dir: str,
-        file_paths: list[str],
+        gcs_files: list[str],
         status: _Status,
         target_id: str | None,
 ) -> None:
     """Calls the Resultstore Upload API to create and populate a new target."""
     client.create_target(target_id)
     client.create_configured_target()
-    client.create_action(gcs_bucket, gcs_dir, file_paths)
+    files = client.get_file_metadata(gcs_bucket, gcs_dir, gcs_files)
+    client.create_action(files)
     client.merge_configured_target(status)
     client.finalize_configured_target()
     client.merge_target(status)
@@ -633,7 +646,7 @@ def main(argv: list[str] | None = None) -> None:
             )
             target_statuses.append(test_result_info.status)
     finally:
-        logging.info('Generating final Resultstore link...')
+        logging.info('Generating final BTX link...')
         invocation_status = _aggregate_subtest_results(target_statuses)
         labels = args.label
         if args.label_on_pass_only:
