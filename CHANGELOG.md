@@ -1,16 +1,24 @@
 # Mobly Android Partner Tools release history
 
+## 1.5.3 (2026-07-15)
+
+### Fixes
+* [results_uploader] Fix handling for repeated/retried test case names.
+
+
 ## 1.5.2 (2026-04-21)
 
 ### New
 * [results_uploader] In non-interactive mode, continue to upload to GCS even if
   the initial Resultstore invocation creation fails.
 
+
 ## 1.5.1 (2026-02-26)
 
 ### New
 * [results_uploader] Support linking a Resultstore invocation to GCS files
   previously uploaded by other means.
+
 
 ## 1.5.0 (2025-11-18)
 
